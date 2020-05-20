@@ -9,18 +9,20 @@ OUTPUT_CHANNELS = 2
 class Detector:
     def __init__(self, image_shape=(128, 128)):
         self.image_shape = image_shape
-        # Supportive stacks
-        self.base_model = keras.applications.MobileNetV2(
-            input_shape=(self.image_shape+(3,)), include_top=False)
-        self.down_stack = self.gen_down_stack()
-        self.up_stack = self.gen_up_stack()
-        # Main model
-        self.model = self.unet_model(OUTPUT_CHANNELS)
-        self.optimizer = 'adam'
-        self.loss_metric = keras.losses.SparseCategoricalCrossentropy(
-            from_logits=True)
-        self.model.compile(optimizer=self.optimizer,
-                           loss=self.loss_metric, metrics=['accuracy'])
+        strategy = tf.distribute.MirroredStrategy()
+        with strategy.scope():
+            # Supportive stacks
+            self.base_model = keras.applications.MobileNetV2(
+                input_shape=(self.image_shape+(3,)), include_top=False)
+            self.down_stack = self.gen_down_stack()
+            self.up_stack = self.gen_up_stack()
+            # Main model
+            self.model = self.unet_model(OUTPUT_CHANNELS)
+            self.optimizer = 'adam'
+            self.loss_metric = keras.losses.SparseCategoricalCrossentropy(
+                from_logits=True)
+            self.model.compile(optimizer=self.optimizer,
+                               loss=self.loss_metric, metrics=['accuracy'])
 
     def gen_down_stack(self):
         layer_names = [

@@ -43,9 +43,11 @@ def show_predictions():
 
 
 def train():
-    detector = Detector(image_shape=(128, 128))
-    ds = Dataset(image_shape=(128, 128))
+    image_shape = (128, 128)
+    batch_size = 64
+    detector = Detector(image_shape)
+    ds = Dataset(image_shape, batch_size)
     pipeline = ds.pipeline()
     epochs = 20
-    steps_per_epoch = ds.num_training//epochs
+    steps_per_epoch = ds.num_training//batch_size
     detector.train(pipeline, epochs, steps_per_epoch)

@@ -64,10 +64,11 @@ class Dataset:
             yield raw_img, mask_img
 
     def prepare_for_training(self, ds):
-        # ds = ds.cache()
+        ds = ds.cache()
         ds = ds.shuffle(1024)
         ds = ds.batch(self.batch_size, drop_remainder=True)
-        # ds = ds.prefetch(buffer_size=AUTOTUNE)
+        ds = ds.repeat()
+        ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         return ds
 
     def pipeline(self):
