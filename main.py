@@ -1,5 +1,5 @@
 import sys
-from test import dataset
+from test import dataset, detector
 
 if __name__ == "__main__":
     if sys.argv[1] == "--test":
@@ -9,6 +9,18 @@ if __name__ == "__main__":
     elif sys.argv[1] == '--dataset':
         if sys.argv[2] == 'mining':
             dataset.mining()
+        if sys.argv[2] == 'show_info':
+            dataset.show_info()
+        if sys.argv[2] == 'view_samples':
+            dataset.view_samples()
+
+    elif sys.argv[1] == '--detector':
+        if sys.argv[2] == 'summary':
+            detector.summary()
+        if sys.argv[2] == 'show_predictions':
+            detector.show_predictions()
+        if sys.argv[2] == 'train':
+            detector.train()
 
     else:
         print("Error: Invalid option!")
