@@ -1,28 +1,37 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow_examples.models.pix2pix import pix2pix
-import matplotlib.pyplot as plt
+import cv2 as cv
+import numpy as np
 
 OUTPUT_CHANNELS = 2
 
 
 class Detector:
-    def __init__(self, image_shape=(128, 128)):
+    def __init__(self, image_shape=(128, 128), model_dir=None):
+        # Params
         self.image_shape = image_shape
-        strategy = tf.distribute.MirroredStrategy()
-        with strategy.scope():
-            # Supportive stacks
-            self.base_model = keras.applications.MobileNetV2(
-                input_shape=(self.image_shape+(3,)), include_top=False)
-            self.down_stack = self.gen_down_stack()
-            self.up_stack = self.gen_up_stack()
-            # Main model
-            self.model = self.unet_model(OUTPUT_CHANNELS)
-            self.optimizer = 'adam'
-            self.loss_metric = keras.losses.SparseCategoricalCrossentropy(
-                from_logits=True)
-            self.model.compile(optimizer=self.optimizer,
-                               loss=self.loss_metric, metrics=['accuracy'])
+        self.model_dir = model_dir
+        # Model
+        if self.model_dir is not None:
+            # Load pretrained model
+            self.model = keras.models.load_model(self.model_dir)
+        else:
+            # Model stack
+            strategy = tf.distribute.MirroredStrategy()
+            with strategy.scope():
+                # Supportive stacks
+                self.base_model = keras.applications.MobileNetV2(
+                    input_shape=(self.image_shape+(3,)), include_top=False)
+                self.down_stack = self.gen_down_stack()
+                self.up_stack = self.gen_up_stack()
+                # Main model
+                self.model = self.unet_model(OUTPUT_CHANNELS)
+                self.optimizer = 'adam'
+                self.loss_metric = keras.losses.SparseCategoricalCrossentropy(
+                    from_logits=True)
+                self.model.compile(optimizer=self.optimizer,
+                                   loss=self.loss_metric, metrics=['accuracy'])
 
     def gen_down_stack(self):
         layer_names = [
@@ -68,24 +77,25 @@ class Detector:
         return keras.Model(inputs=inputs, outputs=x)
 
     def train(self, ds, epochs, steps_per_epoch):
-
         model_history = self.model.fit(
             ds, epochs=epochs, steps_per_epoch=steps_per_epoch)
-
         self.model.save('models')
+        return model_history
 
-        loss = model_history.history['loss']
+    def normalize(self, img):
+        img = cv.resize(img, self.image_shape)
+        return np.array(img/255, dtype=np.float32)
 
-        range_of_epochs = range(epochs)
+    def create_mask(self, pred_mask):
+        pred_mask = np.argmax(pred_mask, axis=-1)
+        pred_mask = pred_mask[..., np.newaxis]
+        mask = pred_mask[0]
+        mask = np.reshape(mask, self.image_shape)
+        mask = np.array(mask, dtype=np.float32)
+        return mask
 
-        plt.figure()
-        plt.plot(range_of_epochs, loss, 'r', label='Training loss')
-        plt.title('Training Loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss Value')
-        plt.ylim([0, 1])
-        plt.legend()
-        plt.show()
-
-    def predict(self, image_batch):
-        return self.model.predict(image_batch)
+    def predict(self, img):
+        image_batch = np.array([img], dtype=np.float32)
+        pred_mask = self.model.predict(image_batch)
+        mask = self.create_mask(pred_mask)
+        return mask

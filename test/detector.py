@@ -1,9 +1,13 @@
 import os
+import datetime
+import time
 import cv2 as cv
+import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from src.detector import Detector
 from src.dataset import Dataset
+from utils.camera import Camera
 
 
 def summary():
@@ -28,8 +32,8 @@ def __display(display_list):
 
 
 def __create_mask(pred_mask):
-    pred_mask = tf.argmax(pred_mask, axis=-1)
-    pred_mask = pred_mask[..., tf.newaxis]
+    pred_mask = np.argmax(pred_mask, axis=-1)
+    pred_mask = pred_mask[..., np.newaxis]
     return pred_mask[0]
 
 
@@ -43,11 +47,68 @@ def show_predictions():
 
 
 def train():
+    # Config params
     image_shape = (128, 128)
     batch_size = 64
+    epochs = 20
+    # Dataset & model
     detector = Detector(image_shape)
     ds = Dataset(image_shape, batch_size)
     pipeline = ds.pipeline()
-    epochs = 20
     steps_per_epoch = ds.num_training//batch_size
-    detector.train(pipeline, epochs, steps_per_epoch)
+    # Start training
+    model_history = detector.train(pipeline, epochs, steps_per_epoch)
+    # Visualize loss
+    loss = model_history.history['loss']
+    range_of_epochs = range(epochs)
+    plt.figure()
+    plt.plot(range_of_epochs, loss, 'r', label='Training loss')
+    plt.title('Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss Value')
+    plt.ylim([0, 1])
+    plt.legend()
+    plt.show()
+
+
+def predict():
+    # Config
+    image_shape = (128, 128)
+    output_shape = (640, 480)
+    alpha = 0.5
+    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    out = cv.VideoWriter(
+        'dist/floorNet-%s.avi' % current_time, cv.VideoWriter_fourcc(*'DIVX'), 10, output_shape)
+    # Model
+    detector = Detector(image_shape, 'models')
+    # Image source
+    cam = Camera()
+    stream = cam.get_stream()
+    # Prediction
+    while True:
+        start = time.time()
+        print("======================================")
+
+        img = stream.get()
+        img = detector.normalize(img)
+        mask = detector.predict(img)
+        mask = cv.cvtColor(mask, cv.COLOR_GRAY2BGR)
+        cv.addWeighted(mask, alpha, img, 1-alpha, 0, img)
+        img = cv.resize(img, output_shape)
+        cv.imshow('Camera', img)
+
+        # Save video
+        frame = (img*255).astype(np.uint8)
+        out.write(frame)
+
+        # Calculate frames per second (FPS)
+        end = time.time()
+        print('Total estimated time: {:.4f}'.format(end-start))
+        fps = 1/(end-start)
+        print("FPS: {:.1f}".format(fps))
+
+        if cv.waitKey(10) & 0xFF == ord('q'):
+            break
+
+    out.release()
+    cam.terminate()

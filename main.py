@@ -21,6 +21,8 @@ if __name__ == "__main__":
             detector.show_predictions()
         if sys.argv[2] == 'train':
             detector.train()
+        if sys.argv[2] == 'predict':
+            detector.predict()
 
     else:
         print("Error: Invalid option!")
