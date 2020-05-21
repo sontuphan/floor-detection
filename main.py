@@ -15,6 +15,8 @@ if __name__ == "__main__":
             dataset.view_samples()
 
     elif sys.argv[1] == '--detector':
+        if sys.argv[2] == 'mobilenet':
+            detector.mobilenet()
         if sys.argv[2] == 'summary':
             detector.summary()
         if sys.argv[2] == 'show_predictions':

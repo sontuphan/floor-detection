@@ -10,8 +10,15 @@ from src.dataset import Dataset
 from utils.camera import Camera
 
 
+def mobilenet():
+    image_shape = (224, 224)
+    base_model = tf.keras.applications.MobileNetV2(
+        input_shape=(image_shape+(3,)), include_top=False)
+    print(base_model.summary())
+
+
 def summary():
-    detector = Detector(image_shape=(128, 128))
+    detector = Detector(image_shape=(224, 224))
     tf.keras.utils.plot_model(detector.model, show_shapes=True)
     img = cv.imread('model.png')
     img = cv.resize(img, (512, 768))
@@ -38,8 +45,9 @@ def __create_mask(pred_mask):
 
 
 def show_predictions():
-    detector = Detector(image_shape=(128, 128))
-    ds = Dataset(image_shape=(128, 128))
+    image_shape = (224, 224)
+    detector = Detector(image_shape)
+    ds = Dataset(image_shape)
     pipeline = ds.pipeline()
     for image, mask in pipeline.take(1):
         pred_mask = detector.predict(image)
@@ -48,7 +56,7 @@ def show_predictions():
 
 def train():
     # Config params
-    image_shape = (128, 128)
+    image_shape = (224, 224)
     batch_size = 64
     epochs = 20
     # Dataset & model
@@ -73,7 +81,7 @@ def train():
 
 def predict():
     # Config
-    image_shape = (128, 128)
+    image_shape = (224, 224)
     output_shape = (640, 480)
     alpha = 0.5
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
