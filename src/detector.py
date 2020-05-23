@@ -49,14 +49,14 @@ class Detector:
 
     def upsample(self, filters, size):
         initializer = tf.random_normal_initializer(0., 0.02)
-        result = keras.Sequential()
-        result.add(keras.layers.Conv2DTranspose(filters, size, strides=2,
-                                                padding='same',
-                                                kernel_initializer=initializer,
-                                                use_bias=False))
-        result.add(keras.layers.BatchNormalization())
-        result.add(keras.layers.ReLU())
-        return result
+        layer = keras.Sequential()
+        layer.add(keras.layers.Conv2DTranspose(filters, size, strides=2,
+                                               padding='same',
+                                               kernel_initializer=initializer,
+                                               use_bias=False))
+        layer.add(keras.layers.BatchNormalization())
+        layer.add(keras.layers.ReLU())
+        return layer
 
     def gen_up_stack(self):
         up_stack = [
@@ -86,9 +86,11 @@ class Detector:
         x = last(x)
         return keras.Model(inputs=inputs, outputs=x)
 
-    def train(self, ds, epochs, steps_per_epoch):
+    def train(self, ds, epochs, steps_per_epoch, val=None, val_steps=None):
         model_history = self.model.fit(
-            ds, epochs=epochs, steps_per_epoch=steps_per_epoch)
+            ds, epochs=epochs, steps_per_epoch=steps_per_epoch,
+            validation_data=val, validation_steps=val_steps
+        )
         self.model.save('models')
         return model_history
 

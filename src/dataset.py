@@ -1,7 +1,6 @@
 import pathlib
 import cv2 as cv
 import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow as tf
 
 
@@ -16,66 +15,75 @@ class Dataset:
         self.image_shape = image_shape
         self.batch_size = batch_size
         # Summary data
-        self.num_training = 0
-        self.num_validation = 0
-        self.__calculate_data_num()
+        self.num_training, self.num_validation = self.__calculate_data_num()
 
     def __calculate_data_num(self):
-        self.num_training = int(len(list(self.training_set.glob('*')))/2)
-        self.num_validation = int(len(list(self.validation_set.glob('*')))/2)
+        num_training = int(len(list(self.training_set.glob('*')))/2)
+        num_validation = int(len(list(self.validation_set.glob('*')))/2)
+        return num_training, num_validation
 
     def __load_img(self, path, mode='rgb'):
         img = cv.imread(path)
         if mode == 'rgb':
             img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-        elif mode == 'gray':
+        if mode == 'gray':
             img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        else:
-            pass
         img = cv.resize(img, self.image_shape)
         return img/255
+
+    @tf.function
+    def __augment(self, raw_img, mask_img):
+        if tf.random.uniform(()) > 0.5:
+            raw_img = tf.image.flip_left_right(raw_img)
+            mask_img = tf.image.flip_left_right(mask_img)
+        return raw_img, mask_img
 
     def print_dataset_info(self):
         print('*** Number of training data:', self.num_training)
         print('*** Number of validation data:', self.num_validation)
 
-    def view_samples(self, samples):
-        samples = list(samples)
-        length = len(samples)
-        plt.figure(figsize=(5, 5*length))
-        for i, (raw_img, mask_img) in enumerate(samples):
-            plt.subplot(length, 2, 2*i+1)
-            plt.imshow(raw_img)
-            plt.subplot(length, 2, 2*i+2)
-            plt.imshow(mask_img)
-        plt.show()
-
     def load_pair(self, name, mode='training'):
-        raw_path = self.datadir+'/'+mode+'/'+str(name)+'.jpg'
+        raw_path = self.datadir+'/'+mode+'/'+name+'.jpg'
         raw_img = self.__load_img(raw_path, 'rgb')
-        mask_path = self.datadir+'/'+mode+'/'+str(name)+'_seg.jpg'
+        mask_path = self.datadir+'/'+mode+'/'+name+'_seg.jpg'
         mask_img = self.__load_img(mask_path, 'gray')
         mask_img = np.reshape(mask_img, (mask_img.shape + (1,)))
         return raw_img, mask_img
 
-    def generator(self):
-        for i in range(self.num_training):
-            raw_img, mask_img = self.load_pair(str(i), 'training')
+    def generator(self, mode):
+        mode = mode.decode('ascii')
+        names = self.num_training if mode == 'training' else self.num_validation
+        for i in range(names):
+            raw_img, mask_img = self.load_pair(str(i), mode)
+            raw_img, mask_img = self.__augment(raw_img, mask_img)
             yield raw_img, mask_img
 
-    def prepare_for_training(self, ds):
-        ds = ds.cache()
-        ds = ds.shuffle(1024)
-        ds = ds.batch(self.batch_size, drop_remainder=True)
-        ds = ds.repeat()
-        ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+    def prepare_ds(self, ds, mode='training'):
+        if mode == 'training':
+            ds = ds.cache()
+            ds = ds.shuffle(1024)
+            ds = ds.batch(self.batch_size)
+            ds = ds.repeat()
+            ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        if mode == 'validation':
+            ds = ds.batch(self.batch_size)
         return ds
 
     def pipeline(self):
-        ds = tf.data.Dataset.from_generator(
+        # Training dataset
+        training_ds = tf.data.Dataset.from_generator(
             self.generator,
+            args=['training'],
             output_types=(tf.float32, tf.float32),
             output_shapes=((self.image_shape+(3,)), (self.image_shape+(1,)))
         )
-        pipeline = self.prepare_for_training(ds)
-        return pipeline
+        training_pipeline = self.prepare_ds(training_ds, 'training')
+        # validation dataset
+        validation_ds = tf.data.Dataset.from_generator(
+            self.generator,
+            args=['validation'],
+            output_types=(tf.float32, tf.float32),
+            output_shapes=((self.image_shape+(3,)), (self.image_shape+(1,)))
+        )
+        validation_pipeline = self.prepare_ds(validation_ds, 'validation')
+        return training_pipeline, validation_pipeline

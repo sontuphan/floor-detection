@@ -48,7 +48,7 @@ def show_predictions():
     image_shape = (224, 224)
     detector = Detector(image_shape)
     ds = Dataset(image_shape)
-    pipeline = ds.pipeline()
+    pipeline, _ = ds.pipeline()
     for image, mask in pipeline.take(1):
         pred_mask = detector.predict(image)
         __display([image[0], mask[0], __create_mask(pred_mask)])
@@ -62,16 +62,21 @@ def train():
     # Dataset & model
     detector = Detector(image_shape)
     ds = Dataset(image_shape, batch_size)
-    pipeline = ds.pipeline()
+    training_pipeline, validation_pipeline = ds.pipeline()
     steps_per_epoch = ds.num_training//batch_size
     # Start training
-    model_history = detector.train(pipeline, epochs, steps_per_epoch)
+    model_history = detector.train(
+        training_pipeline, epochs, steps_per_epoch,
+        validation_pipeline,
+    )
     # Visualize loss
     loss = model_history.history['loss']
+    val_loss = model_history.history['val_loss']
     range_of_epochs = range(epochs)
     plt.figure()
     plt.plot(range_of_epochs, loss, 'r', label='Training loss')
-    plt.title('Training Loss')
+    plt.plot(range_of_epochs, val_loss, 'bo', label='Validation loss')
+    plt.title('Training Loss and Validation Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss Value')
     plt.ylim([0, 1])
