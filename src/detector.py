@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow_examples.models.pix2pix import pix2pix
 import cv2 as cv
 import numpy as np
 
@@ -48,12 +47,23 @@ class Detector:
         down_stack.trainable = False
         return down_stack
 
+    def upsample(self, filters, size):
+        initializer = tf.random_normal_initializer(0., 0.02)
+        result = keras.Sequential()
+        result.add(keras.layers.Conv2DTranspose(filters, size, strides=2,
+                                                padding='same',
+                                                kernel_initializer=initializer,
+                                                use_bias=False))
+        result.add(keras.layers.BatchNormalization())
+        result.add(keras.layers.ReLU())
+        return result
+
     def gen_up_stack(self):
         up_stack = [
-            pix2pix.upsample(512, 3),  # 4x4 -> 8x8
-            pix2pix.upsample(256, 3),  # 8x8 -> 16x16
-            pix2pix.upsample(128, 3),  # 16x16 -> 32x32
-            pix2pix.upsample(64, 3),   # 32x32 -> 64x64
+            self.upsample(512, 3),  # 4x4 -> 8x8
+            self.upsample(256, 3),  # 8x8 -> 16x16
+            self.upsample(128, 3),  # 16x16 -> 32x32
+            self.upsample(64, 3),   # 32x32 -> 64x64
         ]
         return up_stack
 
