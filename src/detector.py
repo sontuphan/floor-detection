@@ -37,11 +37,11 @@ class Detector:
 
     def gen_down_stack(self):
         layer_names = [
-            'block_1_expand_relu',   # 64x64
-            'block_3_expand_relu',   # 32x32
-            'block_6_expand_relu',   # 16x16
-            'block_13_expand_relu',  # 8x8
-            'block_16_project',      # 4x4
+            'block_1_expand_relu',   # 112x112
+            'block_3_expand_relu',   # 56x56
+            'block_6_expand_relu',   # 28x28
+            'block_13_expand_relu',  # 14x14
+            'block_16_project',      # 7x7
         ]
         layers = [self.base_model.get_layer(
             name).output for name in layer_names]
@@ -63,10 +63,10 @@ class Detector:
 
     def gen_up_stack(self):
         up_stack = [
-            self.upsample(512, 3),  # 4x4 -> 8x8
-            self.upsample(256, 3),  # 8x8 -> 16x16
-            self.upsample(128, 3),  # 16x16 -> 32x32
-            self.upsample(64, 3),   # 32x32 -> 64x64
+            self.upsample(512, 4),  # 7x7 -> 14x14
+            self.upsample(256, 4),  # 14x14 -> 28x28
+            self.upsample(128, 4),  # 28x28 -> 56x56
+            self.upsample(64, 4),   # 56x56 -> 112x112
         ]
         return up_stack
 
@@ -82,10 +82,9 @@ class Detector:
             x = up(x)
             concat = keras.layers.Concatenate()
             x = concat([x, skip])
-        # This is the last layer of the model
+        # This is the last layer of the model (112x112 -> 224x224)
         last = keras.layers.Conv2DTranspose(
-            output_channels, 3, strides=2,
-            padding='same')  # 64x64 -> 128x128
+            output_channels, 3, strides=2, padding='same')
         x = last(x)
         return keras.Model(inputs=inputs, outputs=x)
 

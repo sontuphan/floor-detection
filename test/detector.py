@@ -24,7 +24,6 @@ def summary():
     img = cv.resize(img, (512, 768))
     cv.imshow('Model summary', img)
     cv.waitKey()
-    os.remove('model.png')
 
 
 def __display(display_list):
