@@ -5,7 +5,7 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from src.detector import Detector
+from src.detector import Detector, Inference
 from src.dataset import Dataset
 from utils.camera import Camera
 
@@ -122,6 +122,69 @@ def predict():
 
         if cv.waitKey(10) & 0xFF == ord('q'):
             break
-
+    # Clear resources
     out.release()
+    cv.destroyAllWindows()
+    cam.terminate()
+
+
+def convert():
+    # Load model
+    image_shape = (224, 224)
+    detector = Detector(image_shape, 'models')
+    model = detector.model
+    # Data pipeline
+    batch_size = 64
+    ds = Dataset(image_shape, batch_size)
+    pipeline, _ = ds.pipeline()
+
+    def representative_dataset_gen():
+        for tensor in pipeline.take(1):
+            raw_imgs, mask_imgs = tensor
+            img = np.array([raw_imgs[0]])
+            yield [img]  # Shape (1, height, width, channel)
+
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+    converter.representative_dataset = representative_dataset_gen
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    converter.inference_input_type = tf.uint8
+    converter.inference_output_type = tf.uint8
+    tflite_quant_model = converter.convert()
+
+    MODEL = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../models/tpu/ohmnilabs_floornet_224_quant_postprocess.tflite')
+    open(MODEL, 'wb').write(tflite_quant_model)
+
+
+def infer():
+    # Image source
+    cam = Camera()
+    stream = cam.get_stream()
+    # Load edge model
+    EDGE_MODEL = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              '../models/tpu/ohmnilabs_floornet_224_quant_postprocess_edgetpu.tflite')
+    inference = Inference(EDGE_MODEL)
+    # Prediction
+    while True:
+        start = time.time()
+        print("======================================")
+        # Infer
+        raw_img = stream.get()
+        img, mask = inference.predict(raw_img)
+        # Visualize
+        mask = cv.cvtColor(mask, cv.COLOR_GRAY2BGR)
+        cv.addWeighted(mask, 0.5, img, 0.5, 0, img)
+        cv.imshow('Camera', img)
+
+        # Calculate frames per second (FPS)
+        end = time.time()
+        print('Total estimated time: {:.4f}'.format(end-start))
+        fps = 1/(end-start)
+        print("FPS: {:.1f}".format(fps))
+
+        if cv.waitKey(10) & 0xFF == ord('q'):
+            break
+    # Clear resources
+    cv.destroyAllWindows()
     cam.terminate()

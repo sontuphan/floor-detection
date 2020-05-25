@@ -25,6 +25,10 @@ if __name__ == "__main__":
             detector.train()
         if sys.argv[2] == 'predict':
             detector.predict()
+        if sys.argv[2] == 'convert':
+            detector.convert()
+        if sys.argv[2] == 'infer':
+            detector.infer()
 
     else:
         print("Error: Invalid option!")
