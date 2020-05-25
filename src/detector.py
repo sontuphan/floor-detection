@@ -65,8 +65,8 @@ class Detector:
         up_stack = [
             self.upsample(512, 4),  # 7x7 -> 14x14
             self.upsample(256, 4),  # 14x14 -> 28x28
-            self.upsample(128, 6),  # 28x28 -> 56x56
-            self.upsample(64, 8),   # 56x56 -> 112x112
+            self.upsample(128, 4),  # 28x28 -> 56x56
+            self.upsample(64, 4),   # 56x56 -> 112x112
         ]
         return up_stack
 
