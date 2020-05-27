@@ -1,0 +1,5 @@
+opencv-python
+scipy
+matplotlib
+tensorflow==2.2.0
+tflite
