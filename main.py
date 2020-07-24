@@ -1,5 +1,8 @@
 import sys
+import os
 from test import dataset, detector
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 if __name__ == "__main__":
     if sys.argv[1] == "--test":
