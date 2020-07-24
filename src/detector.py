@@ -21,7 +21,7 @@ class Detector:
         else:
             # Model stack
             strategy = tf.distribute.MirroredStrategy(
-                devices=["/gpu:0", "/gpu:1", "/gpu:2"])
+                devices=["/gpu:0", "/gpu:1"])
             with strategy.scope():
                 # Supportive stacks
                 self.base_model = keras.applications.MobileNetV2(
