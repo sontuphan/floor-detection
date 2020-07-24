@@ -53,7 +53,7 @@ def show_predictions():
         __display([image[0], mask[0], __create_mask(pred_mask)])
 
 
-def train():
+def train(dockerized=False):
     # Config params
     image_shape = (224, 224)
     batch_size = 64
@@ -69,18 +69,19 @@ def train():
         validation_pipeline,
     )
     # Visualize loss
-    loss = model_history.history['loss']
-    val_loss = model_history.history['val_loss']
-    range_of_epochs = range(epochs)
-    plt.figure()
-    plt.plot(range_of_epochs, loss, 'r', label='Training loss')
-    plt.plot(range_of_epochs, val_loss, 'bo', label='Validation loss')
-    plt.title('Training Loss and Validation Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss Value')
-    plt.ylim([0, 1])
-    plt.legend()
-    plt.show()
+    if not dockerized:
+        loss = model_history.history['loss']
+        val_loss = model_history.history['val_loss']
+        range_of_epochs = range(epochs)
+        plt.figure()
+        plt.plot(range_of_epochs, loss, 'r', label='Training loss')
+        plt.plot(range_of_epochs, val_loss, 'bo', label='Validation loss')
+        plt.title('Training Loss and Validation Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss Value')
+        plt.ylim([0, 1])
+        plt.legend()
+        plt.show()
 
 
 def predict():

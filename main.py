@@ -22,7 +22,7 @@ if __name__ == "__main__":
         if sys.argv[2] == 'show_predictions':
             detector.show_predictions()
         if sys.argv[2] == 'train':
-            detector.train()
+            detector.train(True)
         if sys.argv[2] == 'predict':
             detector.predict()
         if sys.argv[2] == 'convert':
