@@ -37,8 +37,8 @@ class Dataset:
             img = tf.image.flip_left_right(img)
             mask = tf.image.flip_left_right(mask)
         if tf.random.uniform(()) > 0.5:
-            img = tf.image.central_crop(img, central_fraction=0.2)
-            mask = tf.image.central_crop(mask, central_fraction=0.2)
+            img = tf.image.central_crop(img, central_fraction=0.8)
+            mask = tf.image.central_crop(mask, central_fraction=0.8)
         return img, mask
 
     def print_dataset_info(self):
