@@ -2,3 +2,6 @@
 /dist
 __pycache__
 *.pyc
+/models/assets
+/models/variables
+/models/saved_model.pb

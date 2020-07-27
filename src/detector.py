@@ -91,8 +91,7 @@ class Detector:
     def train(self, ds, epochs, steps_per_epoch, val=None, val_steps=None):
         model_history = self.model.fit(
             ds, epochs=epochs, steps_per_epoch=steps_per_epoch,
-            validation_data=val, validation_steps=val_steps
-        )
+            validation_data=val, validation_steps=val_steps)
         self.model.save('models')
         return model_history
 
