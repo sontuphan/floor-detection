@@ -62,8 +62,10 @@ class Dataset:
         if mode == 'training':
             ds = ds.cache()
             ds = ds.shuffle(1024)
-            ds = ds.batch(self.batch_size)
             ds = ds.repeat()
+            ds = ds.batch(self.batch_size)
+            ds = ds.map(self.__augment,
+                        num_parallel_calls=tf.data.experimental.AUTOTUNE)
             ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         if mode == 'validation':
             ds = ds.batch(self.batch_size)

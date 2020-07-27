@@ -25,7 +25,6 @@ class Detector:
             # Explanation: https://github.com/tensorflow/tensorflow/issues/30887#issuecomment-515146285
             # Workaround: https://github.com/tensorflow/tensorflow/issues/30887#issuecomment-514734323
             strategy = tf.distribute.MirroredStrategy(
-                devices=["/gpu:0", "/gpu:1"],
                 cross_device_ops=tf.distribute.HierarchicalCopyAllReduce()
             )
             with strategy.scope():
