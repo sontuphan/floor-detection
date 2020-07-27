@@ -5,7 +5,7 @@ from test import dataset, detector
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-# Bugfix
+# Bugfixes
 # https://github.com/tensorflow/tensorflow/issues/36510
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
