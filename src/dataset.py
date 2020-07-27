@@ -60,11 +60,11 @@ class Dataset:
 
     def prepare_ds(self, ds, mode='training'):
         if mode == 'training':
-            ds = ds.cache()
+            # ds = ds.cache()
             ds = ds.shuffle(1024)
             ds = ds.batch(self.batch_size)
             ds = ds.repeat()
-            ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+            # ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         if mode == 'validation':
             ds = ds.batch(self.batch_size)
         return ds
