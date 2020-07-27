@@ -34,8 +34,8 @@ class Dataset:
     @tf.function
     def __augment(self, img, mask):
         print(0, img, mask)
-        img = tf.dtypes.cast(img, dtype=tf.float32)
-        mask = tf.dtypes.cast(mask, dtype=tf.float32)
+        img = tf.cast(img, dtype=tf.float32)
+        mask = tf.cast(mask, dtype=tf.float32)
         print(1, img, mask)
         if tf.random.uniform(()) > 0.5:
             img = tf.image.flip_left_right(img)
