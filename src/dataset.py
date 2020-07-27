@@ -36,9 +36,11 @@ class Dataset:
         if tf.random.uniform(()) > 0.5:
             img = tf.image.flip_left_right(img)
             mask = tf.image.flip_left_right(mask)
-        if tf.random.uniform(()) > 0.5:
             img = tf.image.central_crop(img, central_fraction=0.8)
             img = tf.image.resize(img, self.image_shape)
+        # if tf.random.uniform(()) > 0.5:
+        #     img = tf.image.central_crop(img, central_fraction=0.8)
+        #     img = tf.image.resize(img, self.image_shape)
         #     mask = tf.image.central_crop(mask, central_fraction=0.8)
         #     mask = tf.image.resize(mask, self.image_shape)
         return img, mask
