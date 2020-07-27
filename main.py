@@ -1,10 +1,13 @@
 import sys
-from test import dataset, detector
+from test import dataset, detector, augment
 
 
 if __name__ == "__main__":
+    if sys.argv[1] == '--test':
+        if sys.argv[2] == 'augment':
+            augment.brightness()
 
-    if sys.argv[1] == '--dataset':
+    elif sys.argv[1] == '--dataset':
         if sys.argv[2] == 'mining':
             dataset.mining()
         if sys.argv[2] == 'show_info':

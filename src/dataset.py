@@ -33,21 +33,21 @@ class Dataset:
 
     @tf.function
     def __augment(self, img, mask):
-        print(0, img, mask)
         img = tf.cast(img, dtype=tf.float32)
         mask = tf.cast(mask, dtype=tf.float32)
-        print(1, img, mask)
+        # Size-effected augment
         if tf.random.uniform(()) > 0.5:
             img = tf.image.flip_left_right(img)
             mask = tf.image.flip_left_right(mask)
-        print(2, img, mask)
         if tf.random.uniform(()) > 0.5:
             img = tf.image.central_crop(img, central_fraction=0.8)
             mask = tf.image.central_crop(mask, central_fraction=0.8)
-        print(3, img, mask)
         img = tf.image.resize(img, self.image_shape)
         mask = tf.image.resize(mask, self.image_shape)
-        print(4, img, mask)
+        # Size-free augment
+        img = tf.image.random_brightness(img, 0.2)
+        img = tf.image.random_contrast(img, 0.5, 1)
+        img = tf.image.random_saturation(img, 1, 5)
         return img, mask
 
     def print_dataset_info(self):
@@ -73,8 +73,8 @@ class Dataset:
     def prepare_ds(self, ds, mode='training'):
         if mode == 'training':
             ds = ds.cache()
-            ds = ds.shuffle(1024)
             ds = ds.repeat()
+            ds = ds.shuffle(1024)
             ds = ds.batch(self.batch_size)
             ds = ds.map(self.__augment,
                         num_parallel_calls=tf.data.experimental.AUTOTUNE)
