@@ -32,11 +32,14 @@ class Dataset:
         return img/255
 
     @tf.function
-    def __augment(self, raw_img, mask_img):
+    def __augment(self, img, mask):
         if tf.random.uniform(()) > 0.5:
-            raw_img = tf.image.flip_left_right(raw_img)
-            mask_img = tf.image.flip_left_right(mask_img)
-        return raw_img, mask_img
+            img = tf.image.flip_left_right(img)
+            mask = tf.image.flip_left_right(mask)
+        if tf.random.uniform(()) > 0.5:
+            img = tf.image.central_crop(img, central_fraction=0.2)
+            mask = tf.image.central_crop(mask, central_fraction=0.2)
+        return img, mask
 
     def print_dataset_info(self):
         print('*** Number of training data:', self.num_training)
