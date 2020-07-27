@@ -34,16 +34,20 @@ class Dataset:
     @tf.function
     def __augment(self, img, mask):
         print(0, img, mask)
+        img = tf.constant(img, dtype=tf.float32)
+        mask = tf.constant(mask, dtype=tf.float32)
+        print(1, img, mask)
         if tf.random.uniform(()) > 0.5:
             img = tf.image.flip_left_right(img)
             mask = tf.image.flip_left_right(mask)
-        print(1, img, mask)
+        print(2, img, mask)
         if tf.random.uniform(()) > 0.5:
             img = tf.image.central_crop(img, central_fraction=0.8)
-            img = tf.image.resize(img, self.image_shape)
             mask = tf.image.central_crop(mask, central_fraction=0.8)
-            mask = tf.image.resize(mask, self.image_shape)
-        print(2, img, mask)
+        print(3, img, mask)
+        img = tf.image.resize(img, self.image_shape)
+        mask = tf.image.resize(mask, self.image_shape)
+        print(4, img, mask)
         return img, mask
 
     def print_dataset_info(self):
