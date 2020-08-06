@@ -16,9 +16,9 @@ class Collector:
 
     def start(self):
         while True:
-            ok, frame = self.camera.read()
+            ok, frame = self._camera.read()
             if ok:
-                self._Istore_img(frame)
+                self._store_img(frame)
             time.sleep(5)
 
 
