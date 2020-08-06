@@ -4,6 +4,23 @@ import numpy as np
 import tensorflow as tf
 
 
+class Collector:
+    def __init__(self, interval=5):
+        """ This class is only to collect images from the ohmni's navigation camera """
+        self._interval = interval
+        self._camera = cv.VideoCapture(2)
+
+    def _store_img(self, img):
+        print(img.shape)
+
+    def start(self):
+        while True:
+            ok, frame = camera.read()
+            if ok:
+                self._Istore_img(frame)
+            time.sleep(5)
+
+
 class Dataset:
     def __init__(self, image_shape=(128, 128), batch_size=64):
         # Paths

@@ -15,6 +15,5 @@ def brightness():
     img = tf.image.random_contrast(img, 0.5, 1)
     img = tf.image.random_saturation(img, 1, 5)
 
-    print(img)
     plt.imshow(img)
     plt.show()
