@@ -2,6 +2,7 @@ import pathlib
 import cv2 as cv
 import numpy as np
 import tensorflow as tf
+import time
 
 
 class Collector:
@@ -15,7 +16,7 @@ class Collector:
 
     def start(self):
         while True:
-            ok, frame = camera.read()
+            ok, frame = self.camera.read()
             if ok:
                 self._Istore_img(frame)
             time.sleep(5)
