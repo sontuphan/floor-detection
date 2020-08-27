@@ -5,23 +5,17 @@ import pandas as pd
 
 
 class Factory:
-    def __init__(self, image_shape=(128, 128)):
+    def __init__(self):
         self.rootdir = 'dataset'
         self.datadir = self.rootdir + '/ADE20K_2016_07_26'
-        self.outdir = self.rootdir + '/floorNet'
+        self.outdir = self.rootdir + '/ade20k'
         self.matfile = self.datadir+'/index_ade20k.mat'
-        self.image_shape = image_shape
 
     def tranfer_image(self, img):
-        # (BGR)=(10,208,30)
-        for h, row in enumerate(img):
-            for w, pixel in enumerate(row):
-                (b, g, r) = pixel
-                if g != 208 or r != 30:
-                    img[h][w] = [255, 255, 255]
-                else:
-                    img[h][w] = [0, 0, 0]
-        return img
+        # (BGR)=(*,208,30) is floor
+        mask = np.zeros(img.shape) + [255, 255, 255]
+        mask[(img[:, :, 1] == 208) & (img[:, :, 2] == 30)] = [0, 0, 0]
+        return mask
 
     def filter_floor(self, label_txt):
         df = pd.read_csv(label_txt, sep='#', header=None)
@@ -50,10 +44,11 @@ class Factory:
     def mining(self, mode):
         data_path = self.loader(mode)
         for i, (img, txt, mask) in enumerate(data_path):
+            print('======== Counter:', i)
             # Raw image
-            raw_img = cv.resize(cv.imread(img), self.image_shape)
+            raw_img = cv.imread(img)
             cv.imwrite(self.outdir+'/'+mode+'/'+str(i)+'.jpg', raw_img)
             # Mask image
-            mask_img = cv.resize(cv.imread(mask), self.image_shape)
+            mask_img = cv.imread(mask)
             mask_img = self.tranfer_image(mask_img)
             cv.imwrite(self.outdir+'/'+mode+'/'+str(i)+'_seg.jpg', mask_img)

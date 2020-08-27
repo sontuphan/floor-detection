@@ -5,28 +5,11 @@ import tensorflow as tf
 import time
 
 
-class Collector:
-    def __init__(self, interval=5):
-        """ This class is only to collect images from the ohmni's navigation camera """
-        self._interval = interval
-        self._camera = cv.VideoCapture(2)
-
-    def _store_img(self, img):
-        print(img.shape)
-
-    def start(self):
-        while True:
-            ok, frame = self._camera.read()
-            if ok:
-                self._store_img(frame)
-            time.sleep(5)
-
-
 class Dataset:
     def __init__(self, image_shape=(128, 128), batch_size=64):
         # Paths
         self.rootdir = 'dataset'
-        self.datadir = self.rootdir + '/floorLiteNet'
+        self.datadir = self.rootdir + '/FLOORNET'
         self.training_set = pathlib.Path(self.datadir + '/training')
         self.validation_set = pathlib.Path(self.datadir + '/validation')
         # Params
@@ -46,7 +29,7 @@ class Dataset:
             img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         if mode == 'gray':
             img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        img = cv.resize(img, self.image_shape)
+        img = cv.resize(img, self.image_shape, interpolation=cv.INTER_NEAREST)
         return img/255
 
     @tf.function
@@ -60,8 +43,10 @@ class Dataset:
         if tf.random.uniform(()) > 0.5:
             img = tf.image.central_crop(img, central_fraction=0.8)
             mask = tf.image.central_crop(mask, central_fraction=0.8)
-        img = tf.image.resize(img, self.image_shape)
-        mask = tf.image.resize(mask, self.image_shape)
+            img = tf.image.resize(
+                img, self.image_shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+            mask = tf.image.resize(
+                mask, self.image_shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
         # Size-free augment
         img = tf.image.random_brightness(img, 0.2)
         img = tf.image.random_contrast(img, 0.5, 1)

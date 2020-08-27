@@ -5,7 +5,7 @@ from src.dataset import Dataset
 
 
 def mining():
-    factory = Factory(image_shape=(224, 224))
+    factory = Factory()
     factory.mining('training')
     factory.mining('validation')
 
