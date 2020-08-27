@@ -57,7 +57,7 @@ def train(dockerized=False):
     # Config params
     image_shape = (224, 224)
     batch_size = 64
-    epochs = 20
+    epochs = 40
     # Dataset & model
     detector = Detector(image_shape)
     ds = Dataset(image_shape, batch_size)
