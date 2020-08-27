@@ -26,7 +26,7 @@ class Dataset:
     def __init__(self, image_shape=(128, 128), batch_size=64):
         # Paths
         self.rootdir = 'dataset'
-        self.datadir = self.rootdir + '/floorNet'
+        self.datadir = self.rootdir + '/floorLiteNet'
         self.training_set = pathlib.Path(self.datadir + '/training')
         self.validation_set = pathlib.Path(self.datadir + '/validation')
         # Params
