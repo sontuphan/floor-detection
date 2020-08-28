@@ -38,6 +38,14 @@ class Dataset:
         img = cv.resize(img, self.image_shape, interpolation=cv.INTER_NEAREST)
         return img/255
 
+    def _load_pair(self, name, mode='training'):
+        raw_path = self.datadir+'/'+mode+'/'+name+'.jpg'
+        raw_img = self._load_img(raw_path, 'rgb')
+        mask_path = self.datadir+'/'+mode+'/'+name+'_seg.jpg'
+        mask_img = self._load_img(mask_path, 'gray')
+        mask_img = np.reshape(mask_img, (mask_img.shape + (1,)))
+        return raw_img, mask_img
+
     @tf.function
     def _augment(self, img, mask):
         img = tf.cast(img, dtype=tf.float32)
@@ -64,21 +72,12 @@ class Dataset:
         print('*** Number of training data:', self.num_training)
         print('*** Number of validation data:', self.num_validation)
 
-    def _load_pair(self, name, mode='training'):
-        raw_path = self.datadir+'/'+mode+'/'+name+'.jpg'
-        raw_img = self._load_img(raw_path, 'rgb')
-        mask_path = self.datadir+'/'+mode+'/'+name+'_seg.jpg'
-        mask_img = self._load_img(mask_path, 'gray')
-        mask_img = np.reshape(mask_img, (mask_img.shape + (1,)))
-        return raw_img, mask_img
-
     def generator(self, mode):
         mode = mode.decode('ascii')
         names = self.num_training if mode == 'training' else self.num_validation
         for i in range(names):
             raw_img, raw_mask = self._load_pair(str(i), mode)
-            normalized_img, normalized_mask = self._augment(raw_img, raw_mask)
-            yield normalized_img, normalized_mask
+            yield raw_img, raw_mask
 
     def prepare_ds(self, ds, mode='training'):
         if mode == 'training':
