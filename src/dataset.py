@@ -20,7 +20,7 @@ class Dataset:
 
     def _rand(self, min_val, max_val):
         return min_val + random()*(max_val-min_val)
-        
+
     def _calculate_data_num(self):
         num_training = int(len(list(self.training_set.glob('*')))/2)
         num_validation = int(len(list(self.validation_set.glob('*')))/2)
@@ -42,17 +42,19 @@ class Dataset:
         if tf.random.uniform(()) > 0.5:
             img = tf.image.flip_left_right(img)
             mask = tf.image.flip_left_right(mask)
-        central_fraction = self._rand(0.8, 1)
-        img = tf.image.central_crop(img, central_fraction=central_fraction)
-        mask = tf.image.central_crop(mask, central_fraction=central_fraction)
+        # central_fraction = self._rand(0.8, 1)
+        # img = tf.image.central_crop(img, central_fraction=central_fraction)
+        # mask = tf.image.central_crop(mask, central_fraction=central_fraction)
         # Mask-free augmentations
         img = tf.image.random_brightness(img, 0.2)
         img = tf.image.random_contrast(img, 0.5, 1)
         img = tf.image.random_saturation(img, 0.75, 2)
         img = tf.image.random_hue(img, 0.05)
         # Normalize the image shape
-        img = tf.image.resize(img, self.image_shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-        mask = tf.image.resize(mask, self.image_shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        img = tf.image.resize(img, self.image_shape,
+                              method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        mask = tf.image.resize(mask, self.image_shape,
+                               method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
         return img, mask
 
     def print_dataset_info(self):
