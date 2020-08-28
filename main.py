@@ -5,7 +5,7 @@ from test import dataset, detector, augment
 if __name__ == "__main__":
     if sys.argv[1] == '--test':
         if sys.argv[2] == 'augment':
-            augment.brightness()
+            augment.randomize()
 
     elif sys.argv[1] == '--dataset':
         if sys.argv[2] == 'mining':

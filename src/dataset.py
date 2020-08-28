@@ -2,6 +2,7 @@ import pathlib
 import cv2 as cv
 import numpy as np
 import tensorflow as tf
+from random import random
 
 
 class Dataset:
@@ -15,52 +16,57 @@ class Dataset:
         self.image_shape = image_shape
         self.batch_size = batch_size
         # Summary data
-        self.num_training, self.num_validation = self.__calculate_data_num()
+        self.num_training, self.num_validation = self._calculate_data_num()
 
-    def __calculate_data_num(self):
+    def _rand(self, min_val, max_val):
+        return min_val + random()*(max_val-min_val)
+
+    def _resize(self, img, shape):
+        return tf.image.resize(img, shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+
+    def _calculate_data_num(self):
         num_training = int(len(list(self.training_set.glob('*')))/2)
         num_validation = int(len(list(self.validation_set.glob('*')))/2)
         return num_training, num_validation
 
-    def __load_img(self, path, mode='rgb'):
+    def _load_img(self, path, mode='rgb'):
         img = cv.imread(path)
         if mode == 'rgb':
             img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         if mode == 'gray':
             img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        img = cv.resize(img, self.image_shape, interpolation=cv.INTER_NEAREST)
         return img/255
 
     @tf.function
-    def __augment(self, img, mask):
+    def _augment(self, img, mask):
         img = tf.cast(img, dtype=tf.float32)
         mask = tf.cast(mask, dtype=tf.float32)
-        # Size-effected augment
+        # Mask-effected augmentations
         if tf.random.uniform(()) > 0.5:
             img = tf.image.flip_left_right(img)
             mask = tf.image.flip_left_right(mask)
-        if tf.random.uniform(()) > 0.5:
-            img = tf.image.central_crop(img, central_fraction=0.8)
-            mask = tf.image.central_crop(mask, central_fraction=0.8)
-            img = tf.image.resize(
-                img, self.image_shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-            mask = tf.image.resize(
-                mask, self.image_shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-        # Size-free augment
+        central_fraction = self._rand(0.8, 1)
+        img = tf.image.central_crop(img, central_fraction=central_fraction)
+        mask = tf.image.central_crop(mask, central_fraction=central_fraction)
+        # Mask-free augmentations
         img = tf.image.random_brightness(img, 0.2)
         img = tf.image.random_contrast(img, 0.5, 1)
-        img = tf.image.random_saturation(img, 1, 5)
+        img = tf.image.random_saturation(img, 0.75, 2)
+        img = tf.image.random_hue(img, 0.05)
+        # Normalize the image shape
+        img = self._resize(img, self.image_shape)
+        mask = self._resize(mask, self.image_shape)
         return img, mask
 
     def print_dataset_info(self):
         print('*** Number of training data:', self.num_training)
         print('*** Number of validation data:', self.num_validation)
 
-    def load_pair(self, name, mode='training'):
+    def _load_pair(self, name, mode='training'):
         raw_path = self.datadir+'/'+mode+'/'+name+'.jpg'
-        raw_img = self.__load_img(raw_path, 'rgb')
+        raw_img = self._load_img(raw_path, 'rgb')
         mask_path = self.datadir+'/'+mode+'/'+name+'_seg.jpg'
-        mask_img = self.__load_img(mask_path, 'gray')
+        mask_img = self._load_img(mask_path, 'gray')
         mask_img = np.reshape(mask_img, (mask_img.shape + (1,)))
         return raw_img, mask_img
 
@@ -68,9 +74,9 @@ class Dataset:
         mode = mode.decode('ascii')
         names = self.num_training if mode == 'training' else self.num_validation
         for i in range(names):
-            raw_img, mask_img = self.load_pair(str(i), mode)
-            raw_img, mask_img = self.__augment(raw_img, mask_img)
-            yield raw_img, mask_img
+            raw_img, raw_mask = self._load_pair(str(i), mode)
+            normalized_img, normalized_mask = self._augment(raw_img, raw_mask)
+            yield normalized_img, normalized_mask
 
     def prepare_ds(self, ds, mode='training'):
         if mode == 'training':
@@ -78,7 +84,7 @@ class Dataset:
             ds = ds.repeat()
             ds = ds.shuffle(1024)
             ds = ds.batch(self.batch_size)
-            ds = ds.map(self.__augment,
+            ds = ds.map(self._augment,
                         num_parallel_calls=tf.data.experimental.AUTOTUNE)
             ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         if mode == 'validation':
