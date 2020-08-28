@@ -35,7 +35,7 @@ class Dataset:
             img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         if mode == 'gray':
             img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        # img = cv.resize(img, self.image_shape, interpolation=cv.INTER_NEAREST)
+        img = cv.resize(img, self.image_shape, interpolation=cv.INTER_NEAREST)
         return img/255
 
     @tf.function
@@ -56,6 +56,7 @@ class Dataset:
         img = tf.image.random_hue(img, 0.05)
         # Normalize the image shape
         img = self._resize(img, self.image_shape)
+        img = (img - 0.5) / 0.5  # MobileNetv2 [-1,1]
         mask = self._resize(mask, self.image_shape)
         return img, mask
 

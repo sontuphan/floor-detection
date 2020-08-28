@@ -103,7 +103,7 @@ class Detector:
 
     def normalize(self, img):
         img = cv.resize(img, self.image_shape)
-        return np.array(img/255, dtype=np.float32)
+        return np.array((img-127.5)/127.5, dtype=np.float32)
 
     def create_mask(self, pred_mask):
         pred_mask = np.argmax(pred_mask, axis=-1)
