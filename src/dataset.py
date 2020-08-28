@@ -35,7 +35,7 @@ class Dataset:
             img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         if mode == 'gray':
             img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        img = cv.resize(img, self.image_shape, interpolation=cv.INTER_NEAREST)
+        # img = cv.resize(img, self.image_shape, interpolation=cv.INTER_NEAREST)
         return img/255
 
     @tf.function
