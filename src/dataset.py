@@ -20,10 +20,7 @@ class Dataset:
 
     def _rand(self, min_val, max_val):
         return min_val + random()*(max_val-min_val)
-
-    def _resize(self, img, shape):
-        return tf.image.resize(img, shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-
+        
     def _calculate_data_num(self):
         num_training = int(len(list(self.training_set.glob('*')))/2)
         num_validation = int(len(list(self.validation_set.glob('*')))/2)
@@ -54,8 +51,8 @@ class Dataset:
         img = tf.image.random_saturation(img, 0.75, 2)
         img = tf.image.random_hue(img, 0.05)
         # Normalize the image shape
-        img = self._resize(img, self.image_shape)
-        mask = self._resize(mask, self.image_shape)
+        img = tf.image.resize(img, self.image_shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        mask = tf.image.resize(mask, self.image_shape, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
         return img, mask
 
     def print_dataset_info(self):
